@@ -1,14 +1,14 @@
+using System;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
 
-public class WaveManager : MonoBehaviour
+public class WaterSurfaceData : MonoBehaviour
 {
-    public static WaveManager Instance;
-    [SerializeField] private WaterSurface waterSurface;
+    [field: SerializeField] public float FluidDensity { get; private set; } 
+    private WaterSurface waterSurface;
 
-    private void Awake()
-    {
-        Instance = this;
+    private void Awake() {
+        waterSurface = GetComponent<WaterSurface>();
     }
 
     public float GetWaveHeight(Vector3 position)
