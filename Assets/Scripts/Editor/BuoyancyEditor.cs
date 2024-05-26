@@ -1,45 +1,70 @@
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(Buoyancy))]
-public class BuoyancyEditor : Editor {
-    
-    public override void OnInspectorGUI() {
-        DrawDefaultInspector();
-        
-        EditorGUILayoutExtensions.HorizontalLine(Color.gray);
-        
-        Buoyancy buoyancy = (Buoyancy)target;
-        
-        if (GUILayout.Button("Calculate Volume")) {
-            MeshFilter meshFilter = buoyancy.GetComponent<MeshFilter>();
-            buoyancy.Volume = MeshMetrics.CalculateVolume(meshFilter.sharedMesh);
-            EditorUtility.SetDirty(buoyancy);
-        }
-        
-        if (GUILayout.Button("Calculate Surface Area")) {
-            MeshFilter meshFilter = buoyancy.GetComponent<MeshFilter>();
-            buoyancy.SurfaceArea = MeshMetrics.CalculateSurfaceArea(meshFilter.sharedMesh);
-            EditorUtility.SetDirty(buoyancy);
-        }
-        
-        EditorGUILayoutExtensions.HorizontalLine(Color.gray);
+namespace SimpleBuoyancy {
 
-        if (GUILayout.Button("Select Random Volume Points")) {
-            MeshFilter meshFilter = buoyancy.GetComponent<MeshFilter>();
-            if (!meshFilter)
-                return;
-            buoyancy.VolumePoints = MeshMetrics.SampleRandomPointsInsideMesh(meshFilter, buoyancy.NumberOfRandomPoints).ToList();
-            EditorUtility.SetDirty(buoyancy);
+    [CustomEditor(typeof(Buoyancy))]
+    public class BuoyancyEditor : Editor {
+
+        private int numberOfRandomPoints;
+        private bool hideGizmos;
+        private MeshFilter meshFilter;
+        private FieldInfo numberOfRandomPointsField;
+        private FieldInfo hideGizmosField;
+
+        private void OnEnable() {
+            numberOfRandomPointsField =
+                typeof(Buoyancy).GetField("numberOfRandomPoints", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (numberOfRandomPointsField != null)
+                numberOfRandomPoints = (int)numberOfRandomPointsField.GetValue(target);
+
+            hideGizmosField = typeof(Buoyancy).GetField("hideGizmos", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (hideGizmosField != null)
+                hideGizmos = (bool)hideGizmosField.GetValue(target);
+
+            FieldInfo meshFilterField =
+                typeof(Buoyancy).GetField("meshFilter", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (meshFilterField != null)
+                meshFilter = (MeshFilter)meshFilterField.GetValue(target);
         }
-        
-        if (GUILayout.Button("Select Random Surface Points")) {
-            MeshFilter meshFilter = buoyancy.GetComponent<MeshFilter>();
-            if (!meshFilter)
-                return;
-            buoyancy.SurfacePoints = MeshMetrics.SampleRandomPointsOnMesh(meshFilter.sharedMesh, buoyancy.NumberOfRandomPoints).ToList();
-            EditorUtility.SetDirty(buoyancy);
+
+        public override void OnInspectorGUI() {
+            DrawDefaultInspector();
+            Buoyancy buoyancy = (Buoyancy)target;
+
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button("Calculate Volume"))
+                buoyancy.Volume = MeshMetrics.CalculateVolume(meshFilter.sharedMesh);
+
+            if (GUILayout.Button("Calculate Surface Area"))
+                buoyancy.SurfaceArea = MeshMetrics.CalculateSurfaceArea(meshFilter.sharedMesh);
+
+            EditorGUILayout.Space();
+
+            numberOfRandomPoints = EditorGUILayout.IntField("Number of Random Points", numberOfRandomPoints);
+
+            if (numberOfRandomPointsField != null)
+                numberOfRandomPointsField.SetValue(buoyancy, numberOfRandomPoints);
+
+            if (GUILayout.Button("Select Random Volume Points"))
+                buoyancy.VolumePoints =
+                    MeshMetrics.SampleRandomPointsInsideMesh(meshFilter.sharedMesh, numberOfRandomPoints).ToList();
+
+            if (GUILayout.Button("Select Random Surface Points"))
+                buoyancy.SurfacePoints = MeshMetrics
+                    .SampleRandomPointsOnMesh(meshFilter.sharedMesh, numberOfRandomPoints)
+                    .ToList();
+
+            hideGizmos = EditorGUILayout.Toggle("Hide Gizmos", hideGizmos);
+
+            if (hideGizmosField != null)
+                hideGizmosField.SetValue(buoyancy, hideGizmos);
+
+            if (GUI.changed)
+                EditorUtility.SetDirty(buoyancy);
         }
     }
 }
