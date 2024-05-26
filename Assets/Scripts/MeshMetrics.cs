@@ -44,10 +44,11 @@ namespace SimpleBuoyancy {
             Vector3[] points = new Vector3[count];
 
             int i = 0;
+            // FIXME delete this later
             int failsafe = 0;
             while (i < count) {
                 failsafe++;
-                if (failsafe > 1000) {
+                if (failsafe > 1000000) {
                     Debug.LogWarning("Failed to generate random points inside the mesh.");
                     break;
                 }

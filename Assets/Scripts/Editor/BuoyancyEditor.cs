@@ -8,11 +8,14 @@ namespace SimpleBuoyancy {
     [CustomEditor(typeof(Buoyancy))]
     public class BuoyancyEditor : Editor {
 
-        private int numberOfRandomPoints;
-        private bool hideGizmos;
         private MeshFilter meshFilter;
         private FieldInfo numberOfRandomPointsField;
         private FieldInfo hideGizmosField;
+        
+        // FIXME value is not saved
+        private int numberOfRandomPoints;
+        // FIXME value is not saved
+        private bool hideGizmos;
 
         private void OnEnable() {
             numberOfRandomPointsField =
